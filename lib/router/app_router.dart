@@ -1,0 +1,38 @@
+import 'package:application/screens/dashboard/dashboard_screen.dart';
+import 'package:application/screens/login/presentation/screens/auth_page.dart';
+import 'package:flutter/material.dart';
+import 'package:application/router/routes.dart';
+
+import 'package:application/screens/onboarding/onboarding_screen.dart';
+
+class AppRouter {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+
+    switch (settings.name) {
+
+      case AppRoutes.onboarding:
+        return MaterialPageRoute(
+          builder: (_) =>  OnboardingScreen(),
+        );
+
+      case AppRoutes.login:
+        return MaterialPageRoute(
+          builder: (_) =>  PhoneLoginPage(),
+        );
+
+      case AppRoutes.home:
+        return MaterialPageRoute(
+          builder: (_) => const FinanceDashboard(),
+        );
+
+      default:
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Route not found'),
+            ),
+          ),
+        );
+    }
+  }
+}
