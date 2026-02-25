@@ -1,20 +1,24 @@
-
-import 'package:application/screens/login/data/auth_datasource.dart';
+import 'package:application/core/failure/failure.dart';
+import 'package:application/screens/login/data/auth_remote_datasource.dart';
 import 'package:application/screens/login/domain/auth_entity.dart';
 import 'package:application/screens/login/domain/auth_repository.dart';
+import 'package:dartz/dartz.dart';
+
 
 class AuthRepositoryImpl implements AuthRepository {
+
   final AuthRemoteDataSource remoteDataSource;
 
   AuthRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<AuthEntity> sendOtp(String phone) async {
-    return await remoteDataSource.sendOtp(phone);
-  }
+  Future<Either<Failure, AuthEntity>> sendOtp(String phone) async {
 
-  @override
-  Future<String> createAccount(String phone, String nickname) async {
-    return await remoteDataSource.createAccount(phone, nickname);
+    final result = await remoteDataSource.sendOtp(phone);
+
+    return result.fold(
+      (failure) => Left(failure),
+      (model) => Right(model.toEntity()),
+    );
   }
 }

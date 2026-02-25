@@ -14,22 +14,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({
     required this.sendOtpUseCase,
   }) : super(AuthInitial()) {
-    on<SendOtpEvent>((event, emit) async {
-      emit(AuthLoading());
+   on<SendOtpEvent>((event, emit) async {
 
-      try {
-        final result = await sendOtpUseCase(event.phone);
-        print(result.otp);
+  emit(AuthLoading());
 
-        _serverOtp = result.otp;
-        _userExists = result.userExists;
-        _phone = event.phone;
+  final result = await sendOtpUseCase(event.phone);
 
-        emit(OtpSentState(result));
-      } catch (e) {
-        emit(AuthError(e.toString()));
-      }
-    });
+  result.fold(
+
+    /// ✅ FAILURE
+    (failure) {
+      emit(AuthError(failure.message));
+    },
+
+    /// ✅ SUCCESS
+    (authData) {
+
+      _serverOtp = authData.otp;
+      _userExists = authData.userExists;
+      _phone = event.phone;
+
+      emit(OtpSentState(authData));
+    },
+  );
+});
 
     on<VerifyOtpEvent>((event, emit) async {
       if (event.enteredOtp == _serverOtp) {
