@@ -1,6 +1,10 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:application/screens/login/data/auth_datasource.dart';
+
+import 'package:application/core/network/dio_client.dart';
+
+import 'package:application/screens/login/data/auth_remote_datasource.dart';
+import 'package:application/screens/login/data/auth_remote_datasource_impl.dart';
 import 'package:application/screens/login/data/auth_repository_impl.dart';
 import 'package:application/screens/login/domain/auth_repository.dart';
 import 'package:application/screens/login/domain/auth_usecase.dart';
@@ -10,8 +14,8 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
 
-  /// ✅ External
-  sl.registerLazySingleton(() => http.Client());
+  /// ✅ Dio (External)
+  sl.registerLazySingleton<Dio>(() => DioClient.dio);
 
   /// ✅ Data Source
   sl.registerLazySingleton<AuthRemoteDataSource>(
