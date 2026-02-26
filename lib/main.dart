@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.splashScreen,
+        initialRoute: AppRoutes.profilePage,
         onGenerateRoute: AppRouter.generateRoute,
       ),
     );
