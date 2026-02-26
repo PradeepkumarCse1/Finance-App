@@ -4,11 +4,11 @@ import 'package:application/core/service_locator.dart';
 import 'package:application/router/routes.dart';
 import 'package:application/screens/login/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../cubit/otp_timer_cubit.dart';
+import 'package:pinput/pinput.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   const VerifyOtpPage({super.key});
@@ -18,217 +18,79 @@ class VerifyOtpPage extends StatefulWidget {
 }
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
-  final List<TextEditingController> controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<TextEditingController> controllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
 
-  final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
-
-  String get enteredOtp => controllers.map((c) => c.text).join();
-
-  String get enteredOtp => controllers.map((c) => c.text).join();
+  String _enteredOtp = "";
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppPalette.black,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingConst.medium,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
 
-              const SizedBox(height: 30),
-
-              /// Back Button
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: AppPalette.white,
-                ),
-              ),
-
-              const SizedBox(height: SpacingConst.small),
-
-              /// Title
-              const Text(
-                "Verify OTP",
-                style: TextStyle(
-                  fontSize: AppFontSize.display,
-                  fontWeight: FontWeight.bold,
-                  color: AppPalette.white,
-                ),
-              ),
-
-              const SizedBox(height: SpacingConst.extraSmall),
-
-              /// Subtitle
-              const Text(
-                "Enter the 6-Digit code",
-                style: TextStyle(
-                  fontSize: AppFontSize.md,
-                  color: AppPalette.grey,
-                ),
-              ),
-
-              const SizedBox(height: SpacingConst.small),
-
-              /// Change Number
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Text(
-                  "Change Number",
-                  style: TextStyle(
-                    fontSize: AppFontSize.sm,
-                    color: AppPalette.primaryBlue,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              /// OTP Boxes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(6, (index) {
-                  return SizedBox(
-                    width: 48,
-                    height: 56,
-                    child: TextField(
-                      controller: controllers[index],
-                      focusNode: focusNodes[index],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                        fontSize: AppFontSize.xl,
-                        color: AppPalette.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(1),
-                      ],
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor:
-                            AppPalette.lightGrey.withOpacity(0.15),
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        if (value.isNotEmpty && index < 5) {
-                          focusNodes[index + 1]
-                              .requestFocus();
-                        }
-
-                        if (value.isEmpty && index > 0) {
-                          focusNodes[index - 1]
-                              .requestFocus();
-                        }
-                      },
-                    ),
-                  );
-                }),
-              ),
-
-              const SizedBox(height: 50),
-
-              /// Verify Button
-              SizedBox(
-                height: 56,
-                child: BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    return AppButton(
-                      text: "Verify",
-                      onPressed: () {
-                        if (enteredOtp.length == 6) {
-                          context.read<AuthBloc>().add(
-                                VerifyOtpEvent(
-                                  enteredOtp,
-                                ),
-                              );
-                        }
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: SpacingConst.large),
-
-              /// Resend Text
-              const Center(
-                child: Text(
-                  "Resend OTP in 32s",
-                  style: TextStyle(
-                    fontSize: AppFontSize.sm,
-                    color: AppPalette.grey,
-                  ),
-                ),
-  @override
-  void dispose() {
-    for (final c in controllers) {
-      c.dispose();
-    }
-    for (final f in focusNodes) {
-      f.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final height = size.height;
 
-    return BlocProvider(
-      create: (_) => sl<OtpTimerCubit>()..startTimer(),
-      child:  BlocListener<AuthBloc, AuthState>(
-    listener: (context, state) {
- if (state.status == AuthStatus.authenticated) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      }
+    final defaultPinTheme = PinTheme(
+      width: 55,
+      height: 60,
+      textStyle: const TextStyle(
+        fontSize: 22,
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
 
-      if (state.status == AuthStatus.newUser) {
-        Navigator.pushReplacementNamed(context, AppRoutes.createProfile);
-      }
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<OtpTimerCubit>()..startTimer()),
+      ],
 
-      if (state.status == AuthStatus.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.errorMessage ?? "Error")),
-        );
-      }
-    },
+      child: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (previous, current) =>
+            previous.status != current.status,
 
-  
+        listener: (context, state) {
+
+          if (state.status == AuthStatus.authenticated) {
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          }
+
+          if (state.status == AuthStatus.newUser) {
+            Navigator.pushReplacementNamed(
+                context, AppRoutes.createProfile);
+          }
+
+          if (state.status == AuthStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? "Error"),
+              ),
+            );
+          }
+        },
+
         child: Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: AppPalette.black,
+
           body: SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: width * 0.06),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
                   SizedBox(height: height * 0.04),
-        
+
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-        
+
                   SizedBox(height: height * 0.02),
-        
+
                   Text(
                     "Verify OTP",
                     style: TextStyle(
@@ -237,9 +99,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       color: Colors.white,
                     ),
                   ),
-        
+
                   SizedBox(height: height * 0.01),
-        
+
                   Text(
                     "Enter the 6-Digit code",
                     style: TextStyle(
@@ -247,9 +109,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       color: Colors.grey.shade400,
                     ),
                   ),
-        
+
                   SizedBox(height: height * 0.02),
-        
+
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Text(
@@ -260,66 +122,48 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       ),
                     ),
                   ),
-        
+
                   SizedBox(height: height * 0.05),
-        
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(6, (index) {
-                      return SizedBox(
-                        width: width * 0.12,
-                        child: TextField(
-                          controller: controllers[index],
-                          focusNode: focusNodes[index],
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(
-                            fontSize: width * 0.05,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(1),
-                          ],
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey.shade900,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            if (value.isNotEmpty && index < 5) {
-                              focusNodes[index + 1].requestFocus();
-                            }
-        
-                            if (value.isEmpty && index > 0) {
-                              focusNodes[index - 1].requestFocus();
-                            }
-                          },
+
+                  /// ✅ PINPUT 🔥
+                  Center(
+                    child: Pinput(
+                      length: 6,
+                      defaultPinTheme: defaultPinTheme,
+                      focusedPinTheme: defaultPinTheme.copyWith(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade900,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue),
                         ),
-                      );
-                    }),
+                      ),
+
+                      onChanged: (value) {
+                        _enteredOtp = value;
+                      },
+                    ),
                   ),
-        
+
                   SizedBox(height: height * 0.06),
-        
+
                   SizedBox(
                     width: double.infinity,
                     height: height * 0.065,
+
                     child: ElevatedButton(
                       onPressed: () {
-                        if (enteredOtp.length == 6) {
+
+                        if (_enteredOtp.length == 6) {
                           context.read<AuthBloc>().add(
-                            VerifyOtpEvent(enteredOtp),
-                          );
+                                VerifyOtpEvent(_enteredOtp),
+                              );
                         }
                       },
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF031AE8),
                       ),
+
                       child: Text(
                         "Verify",
                         style: TextStyle(
@@ -329,46 +173,43 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       ),
                     ),
                   ),
-        
+
                   SizedBox(height: height * 0.03),
-        
-                  /// ✅ FIXED RESEND LOGIC 😎🔥
+
+                  /// ✅ RESEND TIMER 🔥
                   Center(
                     child: BlocBuilder<OtpTimerCubit, int>(
                       builder: (context, seconds) {
+
                         final canResend = seconds == 0;
-        
+
                         return GestureDetector(
                           onTap: canResend
                               ? () {
-                                  for (final controller in controllers) {
-                                    controller.clear();
-                                  }
-        
-                                  /// ✅ Move cursor to first box
-                                  focusNodes[0].requestFocus();
-                                  final phone = context.read<AuthBloc>().phone;
-        
+
+                                  final phone =
+                                      context.read<AuthBloc>().phone;
+
                                   if (phone != null) {
                                     context.read<AuthBloc>().add(
-                                      ResendOtpEvent(phone), // ✅ FIXED
-                                    );
+                                          ResendOtpEvent(phone),
+                                        );
                                   }
-        
+
                                   context.read<OtpTimerCubit>().resetTimer();
                                 }
                               : null,
-        
+
                           child: Text(
                             canResend
                                 ? "Resend OTP"
                                 : "Resend OTP in ${seconds}s",
-        
+
                             style: TextStyle(
                               fontSize: width * 0.035,
                               color: canResend
                                   ? Colors.blue
-                                  : Colors.grey.shade500,
+                                  : Colors.grey,
                             ),
                           ),
                         );
