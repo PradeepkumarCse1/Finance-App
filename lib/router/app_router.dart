@@ -14,7 +14,7 @@ class AppRouter {
 
       case AppRoutes.onboarding:
         return MaterialPageRoute(
-          builder: (_) =>  NamePage(),
+          builder: (_) =>  OnboardingScreen(),
         );
 
       case AppRoutes.login:
