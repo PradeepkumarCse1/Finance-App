@@ -1,3 +1,4 @@
+import 'package:application/core/app_preferences.dart';
 import 'package:application/screens/login/presentation/cubit/otp_timer_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
@@ -10,11 +11,16 @@ import 'package:application/screens/login/data/auth_repository_impl.dart';
 import 'package:application/screens/login/domain/auth_repository.dart';
 import 'package:application/screens/login/domain/auth_usecase.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
+final prefs = await SharedPreferences.getInstance();
 
+sl.registerLazySingleton<AppPreferences>(
+  () => AppPreferences(prefs),
+);
   /// ✅ Dio (External)
   sl.registerLazySingleton<Dio>(() => DioClient.dio);
 
@@ -34,9 +40,12 @@ Future<void> init() async {
   );
 
   /// ✅ Bloc
-  sl.registerFactory(
-    () => AuthBloc(sendOtpUseCase: sl()),
-  );
+sl.registerFactory(
+  () => AuthBloc(
+    sendOtpUseCase: sl(),
+    appPreferences: sl(),   // ✅ REQUIRED
+  ),
+);
 
     sl.registerFactory(
     () => OtpTimerCubit(),

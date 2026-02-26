@@ -16,3 +16,9 @@ class CreateAccountEvent extends AuthEvent {
 
   CreateAccountEvent(this.phone, this.nickname);
 }
+
+class ResendOtpEvent extends AuthEvent {
+  final String phone;
+
+   ResendOtpEvent(this.phone);
+}
