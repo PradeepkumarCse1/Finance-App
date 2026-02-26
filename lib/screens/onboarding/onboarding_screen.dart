@@ -14,17 +14,17 @@ class OnboardingScreen extends StatelessWidget {
 
   final List<Map<String, String>> pages = [
     {
-      "image": "assets/onboarding/on1.png",
+      "image": "assert/images/onboarding.png",
       "title": "Privacy by Default, With Zero Ads or Hidden Tracking",
       "subtitle": "No ads. No trackers. No third-party analytics."
     },
     {
-      "image": "assets/onboarding/on2.png",
+      "image": "assert/images/onboarding.png",
       "title": "Insights That Help You Spend Better Without Complexity",
       "subtitle": "See category-wise spending, recent activity."
     },
     {
-      "image": "assets/onboarding/on3.png",
+      "image": "assert/images/onboarding.png",
       "title": "Local-First Tracking That Stays Fully On Your Device",
       "subtitle": "Your finances stay on your phone."
     },
