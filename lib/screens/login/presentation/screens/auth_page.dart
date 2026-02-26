@@ -1,3 +1,4 @@
+import 'package:application/common/app_button.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
 import 'package:application/screens/login/presentation/bloc/auth_event.dart';
 import 'package:application/screens/login/presentation/bloc/auth_state.dart';
@@ -13,29 +14,22 @@ class PhoneLoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final height = size.height;
 
     return BlocListener<AuthBloc, AuthState>(
-
       listener: (context, state) {
-
         /// ✅ SUCCESS → OTP SENT
         if (state.status == AuthStatus.otpSent) {
-
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const VerifyOtpPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const VerifyOtpPage()),
           );
         }
 
         /// ✅ FAILURE → ERROR
         if (state.status == AuthStatus.error) {
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? "Something went wrong"),
@@ -44,7 +38,6 @@ class PhoneLoginPage extends StatelessWidget {
           );
         }
       },
-
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
@@ -53,7 +46,6 @@ class PhoneLoginPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 SizedBox(height: height * 0.08),
 
                 /// Title
@@ -86,7 +78,6 @@ class PhoneLoginPage extends StatelessWidget {
                   height: height * 0.07,
                   child: Row(
                     children: [
-
                       Text(
                         "+91",
                         style: TextStyle(
@@ -95,17 +86,13 @@ class PhoneLoginPage extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-
                       SizedBox(width: width * 0.02),
-
                       Container(
                         height: height * 0.03,
                         width: 1,
                         color: Colors.grey.shade400,
                       ),
-
                       SizedBox(width: width * 0.03),
-
                       Expanded(
                         child: TextField(
                           controller: phoneController,
@@ -134,46 +121,34 @@ class PhoneLoginPage extends StatelessWidget {
 
                 SizedBox(height: height * 0.05),
 
-                /// Continue Button
-                SizedBox(
-                  width: double.infinity,
-                  height: height * 0.065,
-                  child: ElevatedButton(
-                    onPressed: () {
+                /// Continue Button (ONLY THIS PART CHANGED)
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    return AppButton(
+                      text: "Continue",
+                      isLoading:
+                          state.status == AuthStatus.loading,
+                      onPressed: () {
+                        final phone = phoneController.text.trim();
 
-                      final phone = phoneController.text.trim();
-
-                      if (phone.length != 10) {
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Enter valid 10 digit phone number"),
-                          ),
-                        );
-
-                        return;
-                      }
-
-                      final fullPhone = "+91$phone";
-
-                      context.read<AuthBloc>().add(
-                            SendOtpEvent(fullPhone),
+                        if (phone.length != 10) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  "Enter valid 10 digit phone number"),
+                            ),
                           );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF031AE8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    child: Text(
-                      "Continue",
-                      style: TextStyle(
-                        fontSize: width * 0.045,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                          return;
+                        }
+
+                        final fullPhone = "+91$phone";
+
+                        context
+                            .read<AuthBloc>()
+                            .add(SendOtpEvent(fullPhone));
+                      },
+                    );
+                  },
                 ),
               ],
             ),
