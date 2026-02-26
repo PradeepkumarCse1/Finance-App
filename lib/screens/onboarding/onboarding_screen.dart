@@ -18,17 +18,17 @@ class OnboardingScreen extends StatelessWidget {
     {
       "image": "assets/images/onboarding.png",
       "title": "Privacy by Default, With Zero Ads or Hidden Tracking",
-      "subtitle": "No ads. No trackers. No third-party analytics."
+      "subtitle": "No ads. No trackers. No third-party analytics.",
     },
     {
       "image": "assets/images/onboarding.png",
       "title": "Insights That Help You Spend Better Without Complexity",
-      "subtitle": "See category-wise spending, recent activity."
+      "subtitle": "See category-wise spending, recent activity.",
     },
     {
       "image": "assets/images/onboarding.png",
       "title": "Local-First Tracking That Stays Fully On Your Device",
-      "subtitle": "Your finances stay on your phone."
+      "subtitle": "Your finances stay on your phone.",
     },
   ];
 
@@ -45,7 +45,6 @@ class OnboardingScreen extends StatelessWidget {
 
               return Stack(
                 children: [
-
                   /// -------- BACKGROUND CAROUSEL --------
                   slider.CarouselSlider.builder(
                     carouselController: _controller,
@@ -55,9 +54,9 @@ class OnboardingScreen extends StatelessWidget {
                       viewportFraction: 1,
                       enableInfiniteScroll: false,
                       onPageChanged: (index, reason) {
-                        context
-                            .read<OnboardingBloc>()
-                            .add(PageChangedEvent(index));
+                        context.read<OnboardingBloc>().add(
+                          PageChangedEvent(index),
+                        );
                       },
                     ),
                     itemBuilder: (context, index, realIndex) {
@@ -68,9 +67,7 @@ class OnboardingScreen extends StatelessWidget {
                             pages[index]["image"]!,
                             fit: BoxFit.cover,
                           ),
-                          Container(
-                            color: AppPalette.black.withOpacity(0.6),
-                          ),
+                          Container(color: AppPalette.black.withOpacity(0.6)),
                         ],
                       );
                     },
@@ -83,7 +80,6 @@ class OnboardingScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-
                         const SizedBox(height: SpacingConst.large),
 
                         /// Skip Button
@@ -91,12 +87,12 @@ class OnboardingScreen extends StatelessWidget {
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              _controller.animateToPage(
-                                  pages.length - 1);
-                              context.read<OnboardingBloc>().add(
-                                    PageChangedEvent(
-                                        pages.length - 1),
-                                  );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PhoneLoginPage(),
+                                ),
+                              );
                             },
                             child: const Text(
                               "SKIP",
@@ -118,25 +114,21 @@ class OnboardingScreen extends StatelessWidget {
                             (index) => Expanded(
                               child: Container(
                                 margin: const EdgeInsets.symmetric(
-                                  horizontal:
-                                      SpacingConst.extraSmall,
+                                  horizontal: SpacingConst.extraSmall,
                                 ),
                                 height: 4,
                                 decoration: BoxDecoration(
                                   color: currentPage >= index
                                       ? AppPalette.white
-                                      : AppPalette.white
-                                          .withOpacity(0.3),
-                                  borderRadius:
-                                      BorderRadius.circular(10),
+                                      : AppPalette.white.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                             ),
                           ),
                         ),
 
-                        const SizedBox(
-                            height: SpacingConst.large),
+                        const SizedBox(height: SpacingConst.large),
 
                         /// Title
                         Text(
@@ -149,8 +141,7 @@ class OnboardingScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(
-                            height: SpacingConst.small),
+                        const SizedBox(height: SpacingConst.small),
 
                         /// Subtitle
                         Text(
@@ -163,21 +154,17 @@ class OnboardingScreen extends StatelessWidget {
                         ),
 
                         /// 🔥 Reduced space here (removed large gap)
-                        const SizedBox(
-                            height: SpacingConst.large),
+                        const SizedBox(height: SpacingConst.large),
 
                         /// Buttons Row
                         Row(
                           children: [
-
                             if (currentPage > 0)
                               IconButton(
                                 onPressed: () {
-                                  context
-                                      .read<
-                                          OnboardingBloc>()
-                                      .add(
-                                          PreviousPageEvent());
+                                  context.read<OnboardingBloc>().add(
+                                    PreviousPageEvent(),
+                                  );
                                   _controller.previousPage();
                                 },
                                 icon: const Icon(
@@ -187,32 +174,25 @@ class OnboardingScreen extends StatelessWidget {
                               ),
 
                             if (currentPage > 0)
-                              const SizedBox(
-                                  width:
-                                      SpacingConst.medium),
+                              const SizedBox(width: SpacingConst.medium),
 
                             Expanded(
                               child: AppButton(
-                                text: currentPage ==
-                                        pages.length - 1
+                                text: currentPage == pages.length - 1
                                     ? "Get Started"
                                     : "Next",
                                 onPressed: () {
-                                  if (currentPage ==
-                                      pages.length - 1) {
+                                  if (currentPage == pages.length - 1) {
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            PhoneLoginPage(),
+                                        builder: (_) => PhoneLoginPage(),
                                       ),
                                     );
                                   } else {
-                                    context
-                                        .read<
-                                            OnboardingBloc>()
-                                        .add(
-                                            NextPageEvent());
+                                    context.read<OnboardingBloc>().add(
+                                      NextPageEvent(),
+                                    );
                                     _controller.nextPage();
                                   }
                                 },
@@ -221,8 +201,7 @@ class OnboardingScreen extends StatelessWidget {
                           ],
                         ),
 
-                        const SizedBox(
-                            height: SpacingConst.large),
+                        const SizedBox(height: SpacingConst.large),
                       ],
                     ),
                   ),
