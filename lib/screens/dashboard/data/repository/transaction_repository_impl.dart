@@ -11,56 +11,58 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   TransactionRepositoryImpl(this.remoteDataSource);
 
-  @override
-  Future<Either<Failure, List<TransactionEntity>>> getTransactions() async {
+@override
+Future<Either<Failure, List<TransactionEntity>>> getTransactions() async {
 
-    try {
-      final result = await remoteDataSource.getTransactions();
-      return Right(result);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  final result = await remoteDataSource.getTransactions();
 
-  @override
-  Future<Either<Failure, List<String>>> syncTransactions(
-    List<TransactionEntity> transactions,
-  ) async {
+  return result.fold(
 
-    try {
+    /// ❌ FAILURE → PASS THROUGH
+    (failure) => Left(failure),
 
-      final models = transactions.map((e) => TransactionModel(
-            id: e.id,
-            amount: e.amount,
-            note: e.note,
-            type: e.type,
-            category: e.category,
-            timestamp: e.timestamp,
-          )).toList();
+    /// ✅ SUCCESS → MAP MODEL → ENTITY
+    (models) => Right(
+      models.map((e) => e.toEntity()).toList(),
+    ),
+  );
+}
+@override
+Future<Either<Failure, List<String>>> syncTransactions(
+  List<TransactionEntity> transactions,
+) async {
 
-      final result =
-          await remoteDataSource.syncTransactions(models);
+  final models = transactions.map((e) => TransactionModel(
+        id: e.id,
+        amount: e.amount,
+        note: e.note,
+        type: e.type,
+        categoryId: e.categoryId,
+        categoryName: e.categoryName,
+        timestamp: e.timestamp,
+      )).toList();
 
-      return Right(result);
+  final result = await remoteDataSource.syncTransactions(models);
 
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  return result.fold(
 
-  @override
-  Future<Either<Failure, List<String>>> deleteTransactions(
-    List<String> ids,
-  ) async {
+    (failure) => Left(failure),
 
-    try {
-      final result =
-          await remoteDataSource.deleteTransactions(ids);
+    (syncedIds) => Right(syncedIds),
+  );
+}
+@override
+Future<Either<Failure, List<String>>> deleteTransactions(
+  List<String> ids,
+) async {
 
-      return Right(result);
+  final result = await remoteDataSource.deleteTransactions(ids);
 
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
+  return result.fold(
+
+    (failure) => Left(failure),
+
+    (deletedIds) => Right(deletedIds),
+  );
+}
 }

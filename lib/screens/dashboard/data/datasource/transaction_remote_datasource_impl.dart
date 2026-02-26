@@ -1,7 +1,8 @@
+import 'package:application/core/failure/failure.dart';
 import 'package:application/screens/dashboard/data/model/transaction_model.dart';
+import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'transaction_remote_datasource.dart';
-
 class TransactionRemoteDataSourceImpl
     implements TransactionRemoteDataSource {
 
@@ -10,47 +11,107 @@ class TransactionRemoteDataSourceImpl
   TransactionRemoteDataSourceImpl(this.dio);
 
   @override
-  Future<List<TransactionModel>> getTransactions() async {
+  Future<Either<Failure, List<TransactionModel>>> getTransactions() async {
 
-    final response = await dio.get('/transactions/');
+    try {
 
-    final List list = response.data['transactions'];
+      final response = await dio.get('/transactions/');
 
-    return list.map((e) => TransactionModel.fromJson(e)).toList();
+      final List list = response.data['transactions'];
+
+      final models =
+          list.map((e) => TransactionModel.fromJson(e)).toList();
+
+      return Right(models);
+    }
+
+    on DioException catch (e) {
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout) {
+
+        return Left(NetworkFailure("No Internet Connection"));
+      }
+
+      return Left(ServerFailure(
+        e.response?.data["message"] ?? "Failed to load transactions",
+      ));
+    }
+
+    catch (e) {
+      return Left(ServerFailure("Unexpected Error"));
+    }
   }
 
   @override
-  Future<List<String>> syncTransactions(
+  Future<Either<Failure, List<String>>> syncTransactions(
     List<TransactionModel> transactions,
   ) async {
 
-    final response = await dio.post(
-      '/transactions/add/',
-      data: {
-        "transactions": transactions.map((e) => {
-              "id": e.id,
-              "amount": e.amount,
-              "note": e.note,
-              "type": e.type,
-              "category_id": e.category,
-              "timestamp": e.timestamp,
-            }).toList(),
-      },
-    );
+    try {
 
-    return List<String>.from(response.data['synced_ids']);
+      final response = await dio.post(
+        '/transactions/add/',
+        data: {
+          "transactions": transactions.map((e) => {
+                "id": e.id,
+                "amount": e.amount,
+                "note": e.note,
+                "type": e.type,
+                "category_id": e.categoryId,
+                "timestamp": e.timestamp,
+              }).toList(),
+        },
+      );
+
+      final syncedIds =
+          List<String>.from(response.data['synced_ids']);
+
+      return Right(syncedIds);
+    }
+
+    on DioException catch (e) {
+
+      return Left(ServerFailure(
+        e.response?.data["message"] ?? "Sync Failed",
+      ));
+    }
+
+    catch (e) {
+      return Left(ServerFailure("Unexpected Sync Error"));
+    }
   }
 
   @override
-  Future<List<String>> deleteTransactions(
+  Future<Either<Failure, List<String>>> deleteTransactions(
     List<String> ids,
   ) async {
 
-    final response = await dio.delete(
+    try {
+
+       final response = await dio.delete(
       '/transactions/delete/',
-      data: { "ids": ids },
+      data: {
+        "ids": ids,  
+      },
     );
 
-    return List<String>.from(response.data['deleted_ids']);
+
+      final deletedIds =
+          List<String>.from(response.data['deleted_ids']);
+
+      return Right(deletedIds);
+    }
+
+    on DioException catch (e) {
+
+      return Left(ServerFailure(
+        e.response?.data["message"] ?? "Delete Failed",
+      ));
+    }
+
+    catch (e) {
+      return Left(ServerFailure("Unexpected Delete Error"));
+    }
   }
 }

@@ -5,7 +5,6 @@ import 'package:application/screens/dashboard/domain/usecase/sync_transactions_u
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
-
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
   final GetTransactionsUseCase getTransactionsUseCase;
@@ -18,7 +17,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     required this.deleteTransactionsUseCase,
   }) : super(const TransactionState()) {
 
-    /// ✅ LOAD TRANSACTIONS
+    /// ✅ LOAD FROM API
     on<LoadTransactionsEvent>((event, emit) async {
 
       emit(state.copyWith(status: TransactionStatus.loading));
@@ -27,102 +26,156 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       result.fold(
 
-        /// ❌ FAILURE
         (failure) {
-          emit(
-            state.copyWith(
-              status: TransactionStatus.error,
-              errorMessage: failure.message,
-            ),
-          );
+          emit(state.copyWith(
+            status: TransactionStatus.error,
+            errorMessage: failure.message,
+          ));
         },
 
-        /// ✅ SUCCESS
         (transactions) {
 
-          final income = _calculateIncome(transactions);
-          final expense = _calculateExpense(transactions);
-
-          emit(
-            state.copyWith(
-              status: TransactionStatus.loaded,
-              transactions: transactions,
-              totalIncome: income,
-              totalExpense: expense,
-            ),
-          );
+          emit(state.copyWith(
+            status: TransactionStatus.loaded,
+            transactions: transactions,
+            totalIncome: _calculateIncome(transactions),
+            totalExpense: _calculateExpense(transactions),
+          ));
         },
       );
     });
 
-    /// ✅ ADD TRANSACTION (Instant UI)
+    /// ✅ ADD → LOCAL FIRST 😎
     on<AddTransactionEvent>((event, emit) {
 
       final updatedList = List<TransactionEntity>.from(state.transactions)
         ..insert(0, event.transaction);
 
-      emit(
-        state.copyWith(
-          transactions: updatedList,
-          totalIncome: _calculateIncome(updatedList),
-          totalExpense: _calculateExpense(updatedList),
-        ),
-      );
+      emit(state.copyWith(
+        transactions: updatedList,
+        totalIncome: _calculateIncome(updatedList),
+        totalExpense: _calculateExpense(updatedList),
+      ));
     });
 
-    /// ✅ SOFT DELETE (Instant UI)
+    /// ✅ DELETE → SOFT DELETE 😎🔥
     on<DeleteTransactionEvent>((event, emit) {
 
-      final updatedList =
-          state.transactions.where((t) => t.id != event.id).toList();
+      final updatedList = state.transactions.map((t) {
 
-      emit(
-        state.copyWith(
-          transactions: updatedList,
-          totalIncome: _calculateIncome(updatedList),
-          totalExpense: _calculateExpense(updatedList),
-        ),
-      );
-    });
-
-    /// ✅ SYNC WORKFLOW
-    on<SyncTransactionsEvent>((event, emit) async {
-
-      emit(state.copyWith(status: TransactionStatus.syncing));
-
-      final result =
-          await syncTransactionsUseCase(state.transactions);
-
-      result.fold(
-
-        /// ❌ FAILURE
-        (failure) {
-          emit(
-            state.copyWith(
-              status: TransactionStatus.error,
-              errorMessage: failure.message,
-            ),
+        if (t.id == event.id) {
+          return t.copyWith(
+            isDeleted: true,
+            isSynced: false,
           );
-        },
+        }
 
-        /// ✅ SUCCESS
-        (_) {
-          emit(state.copyWith(status: TransactionStatus.success));
-        },
-      );
+        return t;
+
+      }).toList();
+
+      emit(state.copyWith(
+        transactions: updatedList,
+        totalIncome: _calculateIncome(updatedList),
+        totalExpense: _calculateExpense(updatedList),
+      ));
     });
+
+    /// ✅ SYNC WORKFLOW 😎🔥
+   on<SyncTransactionsEvent>((event, emit) async {
+
+  emit(state.copyWith(status: TransactionStatus.syncing));
+
+  /// ✅ FILTER RECORDS PROPERLY 😎🔥
+
+  final unsyncedTransactions = state.transactions
+      .where((t) => !t.isDeleted)
+      .where((t) => !t.isSynced)   // 🔥🔥🔥 CRITICAL FIX
+      .toList();
+
+  final deletedTransactions = state.transactions
+      .where((t) => t.isDeleted)
+      .toList();
+
+  /// ✅ 1️⃣ DELETE API FIRST
+
+  if (deletedTransactions.isNotEmpty) {
+
+    final ids = deletedTransactions.map((t) => t.id).toList();
+
+    final deleteResult = await deleteTransactionsUseCase(ids);
+
+    deleteResult.fold(
+
+      (failure) {
+        emit(state.copyWith(
+          status: TransactionStatus.error,
+          errorMessage: failure.message,
+        ));
+        return;
+      },
+
+      (_) {},
+    );
   }
 
-  // ✅ HELPERS
+  /// ✅ 2️⃣ SYNC ONLY NEW RECORDS 😎🔥
+
+  if (unsyncedTransactions.isEmpty) {
+
+    emit(state.copyWith(status: TransactionStatus.success));
+    return;
+  }
+
+  final syncResult =
+      await syncTransactionsUseCase(unsyncedTransactions);
+
+  syncResult.fold(
+
+    (failure) {
+      emit(state.copyWith(
+        status: TransactionStatus.error,
+        errorMessage: failure.message,
+      ));
+    },
+
+    (_) {
+
+      /// ✅ MARK ONLY SYNCED RECORDS 😎🔥
+
+      final updatedList = state.transactions.map((t) {
+
+        if (unsyncedTransactions.any((u) => u.id == t.id)) {
+          return t.copyWith(isSynced: true);
+        }
+
+        return t;
+
+      })
+      .where((t) => !t.isDeleted)   // purge deleted
+      .toList();
+
+      emit(state.copyWith(
+        status: TransactionStatus.success,
+        transactions: updatedList,
+        totalIncome: _calculateIncome(updatedList),
+        totalExpense: _calculateExpense(updatedList),
+      ));
+    },
+  );
+});}
+
 
   double _calculateIncome(List<TransactionEntity> list) {
     return list
+        .where((t) => !t.isDeleted)
         .where((t) => t.type.toLowerCase() == "credit")
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   double _calculateExpense(List<TransactionEntity> list) {
     return list
+        .where((t) => !t.isDeleted)
         .where((t) => t.type.toLowerCase() == "debit")
         .fold(0.0, (sum, t) => sum + t.amount);
   }

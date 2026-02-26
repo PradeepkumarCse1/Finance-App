@@ -1,7 +1,10 @@
+import 'package:application/screens/dashboard/add_transaction_sheet.dart';
 import 'package:application/screens/dashboard/presentation/bloc/navigation_bloc.dart';
 import 'package:application/screens/dashboard/presentation/bloc/transaction_bloc.dart';
 import 'package:application/screens/dashboard/presentation/bloc/transaction_event.dart';
 import 'package:application/screens/dashboard/presentation/bloc/transaction_state.dart';
+import 'package:application/screens/dashboard/transaction_card.dart';
+import 'package:application/screens/profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:application/screens/tranction_history/trancation_history_screen.dart';
@@ -14,27 +17,20 @@ class FinanceDashboard extends StatefulWidget {
 }
 
 class _FinanceDashboardState extends State<FinanceDashboard> {
-
   @override
   void initState() {
     super.initState();
 
     /// 🔥 TRIGGER API CALL HERE
-    context.read<TransactionBloc>().add(
-      LoadTransactionsEvent(),
-    );
+    context.read<TransactionBloc>().add(LoadTransactionsEvent());
   }
+
   @override
   Widget build(BuildContext context) {
     final pages = [
       DashboardHomeContent(),
-      const TransactionsScreen(),
-      const Center(
-        child: Text(
-          "Profile Page",
-          style: TextStyle(color: Colors.white, fontSize: 20),
-        ),
-      ),
+       TransactionsScreen(),
+      ProfilePage(),
     ];
 
     return BlocProvider(
@@ -65,13 +61,25 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
                       context,
                       icon: Icons.pie_chart,
                       active: index == 0,
-                      onTap: () => context.read<NavigationCubit>().changeTab(0),
-                    ),
+                      onTap: () { context.read<NavigationCubit>().changeTab(0);
+                          context.read<TransactionBloc>().add(LoadTransactionsEvent());
+
+               } ),
                     _buildNavIcon(
                       context,
                       icon: Icons.sync_alt,
                       active: index == 1,
-                      onTap: () => context.read<NavigationCubit>().changeTab(1),
+                      onTap: () {
+                        /// ✅ Change tab
+                        context.read<NavigationCubit>().changeTab(1);
+
+                        /// ✅ Trigger sync
+                        context.read<TransactionBloc>().add(
+                          SyncTransactionsEvent(),
+                        );
+                                                  // context.read<TransactionBloc>().add(LoadTransactionsEvent());
+
+                      },
                     ),
                     _buildNavIcon(
                       context,
@@ -87,7 +95,14 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
         ),
 
         floatingActionButton: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true, // ✅ IMPORTANT (keyboard safe)
+              backgroundColor: Colors.transparent,
+              builder: (_) => const AddTransactionSheet(),
+            );
+          },
           backgroundColor: Colors.green,
           child: const Icon(Icons.add),
         ),
@@ -128,7 +143,10 @@ class DashboardHomeContent extends StatelessWidget {
           builder: (context, state) {
             final income = state.totalIncome;
             final expense = state.totalExpense;
-
+final recentTransactions = state.transactions
+    .where((t) => !t.isDeleted)
+    .take(10)
+    .toList();
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -191,10 +209,18 @@ class DashboardHomeContent extends StatelessWidget {
                 /// ✅ Transactions List
                 Expanded(
                   child: ListView.builder(
-                    itemCount: state.transactions.length,
+                    itemCount: recentTransactions.length,
                     itemBuilder: (context, index) {
-                      final txn = state.transactions[index];
-                      return _buildTransactionTile(txn, width);
+                      final txn = recentTransactions[index];
+
+                      return TransactionCardWidget(
+                        transaction: txn,
+                        onDelete: () {
+                          context.read<TransactionBloc>().add(
+                            DeleteTransactionEvent(txn.id),
+                          );
+                        },
+                      ); // ✅ REUSED
                     },
                   ),
                 ),
@@ -327,7 +353,7 @@ class DashboardHomeContent extends StatelessWidget {
                 const SizedBox(height: 2),
 
                 Text(
-                  txn.category,
+                  txn.categoryName,
                   style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ],
