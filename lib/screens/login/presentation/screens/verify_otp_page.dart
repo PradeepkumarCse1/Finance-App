@@ -1,3 +1,6 @@
+import 'package:application/common/app_button.dart';
+import 'package:application/common/constant.dart';
+import 'package:application/screens/login/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,94 +16,92 @@ class VerifyOtpPage extends StatefulWidget {
 }
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
-
   final List<TextEditingController> controllers =
       List.generate(6, (_) => TextEditingController());
 
   final List<FocusNode> focusNodes =
       List.generate(6, (_) => FocusNode());
 
-  String get enteredOtp =>
-      controllers.map((c) => c.text).join();
+  String get enteredOtp => controllers.map((c) => c.text).join();
 
   @override
   Widget build(BuildContext context) {
-
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final height = size.height;
-
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppPalette.black,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: width * 0.06),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingConst.medium,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              SizedBox(height: height * 0.04),
+              const SizedBox(height: 30),
 
               /// Back Button
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: AppPalette.white,
+                ),
               ),
 
-              SizedBox(height: height * 0.02),
+              const SizedBox(height: SpacingConst.small),
 
               /// Title
-              Text(
+              const Text(
                 "Verify OTP",
                 style: TextStyle(
-                  fontSize: width * 0.07,
+                  fontSize: AppFontSize.display,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppPalette.white,
                 ),
               ),
 
-              SizedBox(height: height * 0.01),
+              const SizedBox(height: SpacingConst.extraSmall),
 
               /// Subtitle
-              Text(
+              const Text(
                 "Enter the 6-Digit code",
                 style: TextStyle(
-                  fontSize: width * 0.04,
-                  color: Colors.grey.shade400,
+                  fontSize: AppFontSize.md,
+                  color: AppPalette.grey,
                 ),
               ),
 
-              SizedBox(height: height * 0.02),
+              const SizedBox(height: SpacingConst.small),
 
               /// Change Number
               GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: Text(
+                child: const Text(
                   "Change Number",
                   style: TextStyle(
-                    fontSize: width * 0.038,
-                    color: Colors.blue,
+                    fontSize: AppFontSize.sm,
+                    color: AppPalette.primaryBlue,
                   ),
                 ),
               ),
 
-              SizedBox(height: height * 0.05),
+              const SizedBox(height: 40),
 
               /// OTP Boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (index) {
-
                   return SizedBox(
-                    width: width * 0.12,
+                    width: 48,
+                    height: 56,
                     child: TextField(
                       controller: controllers[index],
                       focusNode: focusNodes[index],
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
-                      style: TextStyle(
-                        fontSize: width * 0.05,
-                        color: Colors.white,
+                      style: const TextStyle(
+                        fontSize: AppFontSize.xl,
+                        color: AppPalette.white,
                         fontWeight: FontWeight.bold,
                       ),
                       inputFormatters: [
@@ -109,21 +110,23 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       ],
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.grey.shade900,
+                        fillColor:
+                            AppPalette.lightGrey.withOpacity(0.15),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius:
+                              BorderRadius.circular(8),
                           borderSide: BorderSide.none,
                         ),
                       ),
-
                       onChanged: (value) {
-
                         if (value.isNotEmpty && index < 5) {
-                          focusNodes[index + 1].requestFocus();
+                          focusNodes[index + 1]
+                              .requestFocus();
                         }
 
                         if (value.isEmpty && index > 0) {
-                          focusNodes[index - 1].requestFocus();
+                          focusNodes[index - 1]
+                              .requestFocus();
                         }
                       },
                     ),
@@ -131,46 +134,38 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                 }),
               ),
 
-              SizedBox(height: height * 0.06),
+              const SizedBox(height: 50),
 
               /// Verify Button
               SizedBox(
-                width: double.infinity,
-                height: height * 0.065,
-                child: ElevatedButton(
-                  onPressed: () {
-
-                    if (enteredOtp.length == 6) {
-                      context.read<AuthBloc>().add(
-                        VerifyOtpEvent(enteredOtp),
-                      );
-                    }
+                height: 56,
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    return AppButton(
+                      text: "Verify",
+                      onPressed: () {
+                        if (enteredOtp.length == 6) {
+                          context.read<AuthBloc>().add(
+                                VerifyOtpEvent(
+                                  enteredOtp,
+                                ),
+                              );
+                        }
+                      },
+                    );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF031AE8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    "Verify",
-                    style: TextStyle(
-                      fontSize: width * 0.045,
-                      color: Colors.white,
-                    ),
-                  ),
                 ),
               ),
 
-              SizedBox(height: height * 0.03),
+              const SizedBox(height: SpacingConst.large),
 
               /// Resend Text
-              Center(
+              const Center(
                 child: Text(
                   "Resend OTP in 32s",
                   style: TextStyle(
-                    fontSize: width * 0.035,
-                    color: Colors.grey.shade500,
+                    fontSize: AppFontSize.sm,
+                    color: AppPalette.grey,
                   ),
                 ),
               ),
