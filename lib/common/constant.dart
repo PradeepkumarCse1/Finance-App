@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
-class FontConst {
-  FontConst._();
+class AppFontSize {
+  AppFontSize._();
 
-  static const double small = 12.0;
-  static const double medium = 16.0;
-  static const double large = 20.0;
-  static const double xLarge = 24.0;
+  static const double xs = 10.0;   // Very small hint
+  static const double sm = 12.0;   // Caption
+  static const double md = 14.0;   // Secondary text
+  static const double lg = 16.0;   // Body text (default)
+  static const double xl = 18.0;   // Title
+  static const double xxl = 22.0;  // Big heading
+  static const double display = 26.0; // Screen title
 }
 
 class SpacingConst {

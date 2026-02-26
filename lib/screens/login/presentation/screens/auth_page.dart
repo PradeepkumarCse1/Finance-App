@@ -1,4 +1,5 @@
 import 'package:application/common/app_button.dart';
+import 'package:application/common/constant.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
 import 'package:application/screens/login/presentation/bloc/auth_event.dart';
 import 'package:application/screens/login/presentation/bloc/auth_state.dart';
@@ -14,13 +15,8 @@ class PhoneLoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final height = size.height;
-
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        /// ✅ SUCCESS → OTP SENT
         if (state.status == AuthStatus.otpSent) {
           Navigator.push(
             context,
@@ -28,71 +24,78 @@ class PhoneLoginPage extends StatelessWidget {
           );
         }
 
-        /// ✅ FAILURE → ERROR
         if (state.status == AuthStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? "Something went wrong"),
-              backgroundColor: Colors.red,
+              backgroundColor: AppPalette.error,
             ),
           );
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppPalette.black,
         body: SafeArea(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.06),
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingConst.medium,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: height * 0.08),
+
+                const SizedBox(height: 60),
 
                 /// Title
-                Text(
+                const Text(
                   "Get Started",
                   style: TextStyle(
-                    fontSize: width * 0.07,
+                    fontSize: AppFontSize.display,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppPalette.white,
                   ),
                 ),
 
-                SizedBox(height: height * 0.01),
+                const SizedBox(height: SpacingConst.small),
 
                 /// Subtitle
-                Text(
+                const Text(
                   "Log In Using Phone & OTP",
                   style: TextStyle(
-                    fontSize: width * 0.04,
-                    color: const Color.fromARGB(143, 255, 255, 255),
+                    fontSize: AppFontSize.md,
+                    color: AppPalette.grey,
                   ),
                 ),
 
-                SizedBox(height: height * 0.05),
+                const SizedBox(height: 40),
 
                 /// Phone Input Box
                 Container(
-                  color: const Color.fromARGB(56, 117, 117, 117),
-                  padding: EdgeInsets.symmetric(horizontal: width * 0.03),
-                  height: height * 0.07,
+                  height: 56,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingConst.medium,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppPalette.lightGrey.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Row(
                     children: [
-                      Text(
+                      const Text(
                         "+91",
                         style: TextStyle(
-                          fontSize: width * 0.045,
+                          fontSize: AppFontSize.lg,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                          color: AppPalette.white,
                         ),
                       ),
-                      SizedBox(width: width * 0.02),
+                      const SizedBox(width: SpacingConst.small),
                       Container(
-                        height: height * 0.03,
+                        height: 24,
                         width: 1,
-                        color: Colors.grey.shade400,
+                        color: AppPalette.grey,
                       ),
-                      SizedBox(width: width * 0.03),
+                      const SizedBox(width: SpacingConst.medium),
                       Expanded(
                         child: TextField(
                           controller: phoneController,
@@ -101,16 +104,16 @@ class PhoneLoginPage extends StatelessWidget {
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(10),
                           ],
-                          style: TextStyle(
-                            fontSize: width * 0.045,
-                            color: Colors.white,
+                          style: const TextStyle(
+                            fontSize: AppFontSize.lg,
+                            color: AppPalette.white,
                           ),
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             border: InputBorder.none,
                             hintText: "Phone",
                             hintStyle: TextStyle(
-                              fontSize: width * 0.04,
-                              color: Colors.grey.shade500,
+                              fontSize: AppFontSize.md,
+                              color: AppPalette.grey,
                             ),
                           ),
                         ),
@@ -119,9 +122,9 @@ class PhoneLoginPage extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: height * 0.05),
+                const SizedBox(height: SpacingConst.large),
 
-                /// Continue Button (ONLY THIS PART CHANGED)
+                /// Continue Button
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     return AppButton(
@@ -135,7 +138,8 @@ class PhoneLoginPage extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                  "Enter valid 10 digit phone number"),
+                                "Enter valid 10 digit phone number",
+                              ),
                             ),
                           );
                           return;

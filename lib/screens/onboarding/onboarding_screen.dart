@@ -1,3 +1,5 @@
+import 'package:application/common/app_button.dart';
+import 'package:application/common/constant.dart';
 import 'package:application/screens/login/presentation/screens/auth_page.dart';
 import 'package:application/screens/onboarding/bloc/onboarding_bloc.dart';
 import 'package:application/screens/onboarding/bloc/onboarding_event.dart';
@@ -14,17 +16,17 @@ class OnboardingScreen extends StatelessWidget {
 
   final List<Map<String, String>> pages = [
     {
-      "image": "assert/images/onboarding.png",
+      "image": "assets/images/onboarding.png",
       "title": "Privacy by Default, With Zero Ads or Hidden Tracking",
       "subtitle": "No ads. No trackers. No third-party analytics."
     },
     {
-      "image": "assert/images/onboarding.png",
+      "image": "assets/images/onboarding.png",
       "title": "Insights That Help You Spend Better Without Complexity",
       "subtitle": "See category-wise spending, recent activity."
     },
     {
-      "image": "assert/images/onboarding.png",
+      "image": "assets/images/onboarding.png",
       "title": "Local-First Tracking That Stays Fully On Your Device",
       "subtitle": "Your finances stay on your phone."
     },
@@ -35,199 +37,199 @@ class OnboardingScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => OnboardingBloc(),
       child: Scaffold(
-        backgroundColor: Colors.black,
-        body: BlocBuilder<OnboardingBloc, OnboardingState>(
-          builder: (context, state) {
-            final currentPage = state.currentPage;
+        backgroundColor: AppPalette.black,
+        body: SafeArea(
+          child: BlocBuilder<OnboardingBloc, OnboardingState>(
+            builder: (context, state) {
+              final currentPage = state.currentPage;
 
-            return Stack(
-              children: [
+              return Stack(
+                children: [
 
-                /// ---------------- CAROUSEL ----------------
-                slider.CarouselSlider.builder(
-                  carouselController: _controller,
-                  itemCount: pages.length,
-                  options: slider.CarouselOptions(
-                    height: double.infinity,
-                    viewportFraction: 1,
-                    enableInfiniteScroll: false,
-                    onPageChanged: (index, reason) {
-                      context.read<OnboardingBloc>().add(PageChangedEvent(index));
+                  /// -------- BACKGROUND CAROUSEL --------
+                  slider.CarouselSlider.builder(
+                    carouselController: _controller,
+                    itemCount: pages.length,
+                    options: slider.CarouselOptions(
+                      height: double.infinity,
+                      viewportFraction: 1,
+                      enableInfiniteScroll: false,
+                      onPageChanged: (index, reason) {
+                        context
+                            .read<OnboardingBloc>()
+                            .add(PageChangedEvent(index));
+                      },
+                    ),
+                    itemBuilder: (context, index, realIndex) {
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(
+                            pages[index]["image"]!,
+                            fit: BoxFit.cover,
+                          ),
+                          Container(
+                            color: AppPalette.black.withOpacity(0.6),
+                          ),
+                        ],
+                      );
                     },
                   ),
-                  itemBuilder: (context, index, realIndex) {
-                    final page = pages[index];
 
-                    return Stack(
-                      fit: StackFit.expand,
+                  /// -------- CONTENT LAYER --------
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingConst.large,
+                    ),
+                    child: Column(
                       children: [
 
-                        /// Background Image
-                        Image.asset(
-                          page["image"]!,
-                          fit: BoxFit.cover,
-                        ),
+                        const SizedBox(height: SpacingConst.large),
 
-                        /// Dark Overlay
-                        Container(
-                          color: Colors.black.withOpacity(0.6),
-                        ),
-
-                        /// Text Content
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 120, 20, 110),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                page["title"]!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        /// Skip Button
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              _controller.animateToPage(
+                                  pages.length - 1);
+                              context.read<OnboardingBloc>().add(
+                                    PageChangedEvent(
+                                        pages.length - 1),
+                                  );
+                            },
+                            child: const Text(
+                              "SKIP",
+                              style: TextStyle(
+                                color: AppPalette.white,
+                                fontSize: AppFontSize.lg,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                page["subtitle"]!,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        )
+                        ),
+
+                        const Spacer(),
+
+                        /// -------- FULL WIDTH INDICATOR --------
+                        Row(
+                          children: List.generate(
+                            pages.length,
+                            (index) => Expanded(
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal:
+                                      SpacingConst.extraSmall,
+                                ),
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: currentPage >= index
+                                      ? AppPalette.white
+                                      : AppPalette.white
+                                          .withOpacity(0.3),
+                                  borderRadius:
+                                      BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: SpacingConst.large),
+
+                        /// Title
+                        Text(
+                          pages[currentPage]["title"]!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppPalette.white,
+                            fontSize: AppFontSize.xl,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: SpacingConst.small),
+
+                        /// Subtitle
+                        Text(
+                          pages[currentPage]["subtitle"]!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppPalette.grey,
+                            fontSize: AppFontSize.md,
+                          ),
+                        ),
+
+                        /// 🔥 Reduced space here (removed large gap)
+                        const SizedBox(
+                            height: SpacingConst.large),
+
+                        /// Buttons Row
+                        Row(
+                          children: [
+
+                            if (currentPage > 0)
+                              IconButton(
+                                onPressed: () {
+                                  context
+                                      .read<
+                                          OnboardingBloc>()
+                                      .add(
+                                          PreviousPageEvent());
+                                  _controller.previousPage();
+                                },
+                                icon: const Icon(
+                                  Icons.arrow_back_ios,
+                                  color: AppPalette.white,
+                                ),
+                              ),
+
+                            if (currentPage > 0)
+                              const SizedBox(
+                                  width:
+                                      SpacingConst.medium),
+
+                            Expanded(
+                              child: AppButton(
+                                text: currentPage ==
+                                        pages.length - 1
+                                    ? "Get Started"
+                                    : "Next",
+                                onPressed: () {
+                                  if (currentPage ==
+                                      pages.length - 1) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            PhoneLoginPage(),
+                                      ),
+                                    );
+                                  } else {
+                                    context
+                                        .read<
+                                            OnboardingBloc>()
+                                        .add(
+                                            NextPageEvent());
+                                    _controller.nextPage();
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(
+                            height: SpacingConst.large),
                       ],
-                    );
-                  },
-                ),
-
-                /// ---------------- SKIP BUTTON ----------------
-                Positioned(
-                  top: 50,
-                  right: 20,
-                  child: TextButton(
-                    onPressed: () {
-                      _controller.animateToPage(pages.length - 1);
-                      context
-                          .read<OnboardingBloc>()
-                          .add(PageChangedEvent(pages.length - 1));
-                    },
-                    child: const Text(
-                      "SKIP",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ),
-                ),
-
-                /// ---------------- PAGE INDICATOR ----------------
-                Positioned(
-                  bottom: 230,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      pages.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        width: MediaQuery.of(context).size.width / 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: currentPage >= index
-                              ? Colors.white
-                              : Colors.white24,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                /// ---------------- BACK + NEXT BUTTONS ----------------
-                Positioned(
-                  bottom: 50,
-                  left: 20,
-                  right: 20,
-                  child: Row(
-                    children: [
-
-                      /// BACK BUTTON
-                      if (currentPage > 0)
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white38),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () {
-                            context.read<OnboardingBloc>().add(PreviousPageEvent());
-                            _controller.previousPage();
-                          },
-                          child: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: Image.asset("assert/images/back_button.png"),
-                          ),
-                        ),
-
-                      if (currentPage > 0)
-                        const SizedBox(width: 12),
-
-                      /// NEXT / GET STARTED BUTTON
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 11, 43, 226),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (currentPage == pages.length - 1) {
-
-                              /// ✅ NAVIGATE TO PHONE LOGIN PAGE
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PhoneLoginPage(),
-                                ),
-                              );
-
-                            } else {
-                              context.read<OnboardingBloc>().add(NextPageEvent());
-                              _controller.nextPage();
-                            }
-                          },
-                          child: Text(
-                            currentPage == pages.length - 1
-                                ? "Get Started"
-                                : "Next",
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
