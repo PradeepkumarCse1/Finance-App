@@ -26,7 +26,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => PhoneLoginPage());
       case AppRoutes.home:
         return MaterialPageRoute(
-          builder: (_) =>  NamePage(),
+          builder: (_) =>  FinanceDashboard(),
         );
         case AppRoutes.verify:
         return MaterialPageRoute(

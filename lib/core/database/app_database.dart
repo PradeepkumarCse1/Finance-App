@@ -37,16 +37,16 @@ class AppDatabase {
       )
     ''');
 
-    /// 🔥 Transactions Table (if needed)
-    await db.execute('''
-      CREATE TABLE transactions(
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        amount REAL,
-        category_id TEXT,
-        is_synced INTEGER,
-        is_deleted INTEGER
-      )
-    ''');
+    // /// 🔥 Transactions Table (if needed)
+    // await db.execute('''
+    //   CREATE TABLE transactions(
+    //     id TEXT PRIMARY KEY,
+    //     title TEXT,
+    //     amount REAL,
+    //     category_id TEXT,
+    //     is_synced INTEGER,
+    //     is_deleted INTEGER
+    //   )
+    // ''');
   }
 }
