@@ -1,3 +1,4 @@
+import 'package:application/screens/login/presentation/cubit/otp_timer_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
@@ -35,5 +36,9 @@ Future<void> init() async {
   /// ✅ Bloc
   sl.registerFactory(
     () => AuthBloc(sendOtpUseCase: sl()),
+  );
+
+    sl.registerFactory(
+    () => OtpTimerCubit(),
   );
 }

@@ -12,10 +12,10 @@ class AuthModel extends AuthEntity {
 
   factory AuthModel.fromJson(Map<String, dynamic> json) {
     return AuthModel(
-      otp: json['otp'],
-      userExists: json['user_exists'],
-      nickname: json['nickname'],
-      token: json['token'],
+      otp: json['otp']??"",
+      userExists: json['user_exists']??false,
+      nickname: json['nickname']??"",
+      token: json['token']??"",
     );
   }
 
