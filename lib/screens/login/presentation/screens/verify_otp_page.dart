@@ -1,12 +1,14 @@
-import 'package:application/common/app_button.dart';
 import 'package:application/common/constant.dart';
+import 'package:application/core/service_locator.dart';
+import 'package:application/router/routes.dart';
 import 'package:application/screens/login/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
+import '../cubit/otp_timer_cubit.dart';
+import 'package:pinput/pinput.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   const VerifyOtpPage({super.key});
@@ -16,160 +18,222 @@ class VerifyOtpPage extends StatefulWidget {
 }
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
-  final List<TextEditingController> controllers =
-      List.generate(6, (_) => TextEditingController());
+  final TextEditingController _otpController = TextEditingController();
 
-  final List<FocusNode> focusNodes =
-      List.generate(6, (_) => FocusNode());
-
-  String get enteredOtp => controllers.map((c) => c.text).join();
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppPalette.black,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingConst.medium,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
 
-              const SizedBox(height: 30),
+    final defaultPinTheme = PinTheme(
+      width: 55,
+      height: 60,
+      textStyle: const TextStyle(
+        fontSize: 22,
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
 
-              /// Back Button
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: AppPalette.white,
-                ),
-              ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<OtpTimerCubit>()..startTimer()),
+      ],
 
-              const SizedBox(height: SpacingConst.small),
+      child: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (previous, current) => previous.status != current.status,
 
-              /// Title
-              const Text(
-                "Verify OTP",
-                style: TextStyle(
-                  fontSize: AppFontSize.display,
-                  fontWeight: FontWeight.bold,
-                  color: AppPalette.white,
-                ),
-              ),
+        listener: (context, state) {
+          if (state.status == AuthStatus.authenticated) {
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          }
 
-              const SizedBox(height: SpacingConst.extraSmall),
+          if (state.status == AuthStatus.newUser) {
+            Navigator.pushReplacementNamed(context, AppRoutes.createProfile);
+          }
 
-              /// Subtitle
-              const Text(
-                "Enter the 6-Digit code",
-                style: TextStyle(
-                  fontSize: AppFontSize.md,
-                  color: AppPalette.grey,
-                ),
-              ),
+          if (state.status == AuthStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? "Error")),
+            );
+          }
+        },
 
-              const SizedBox(height: SpacingConst.small),
+        child: Scaffold(
+          backgroundColor: AppPalette.black,
 
-              /// Change Number
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Text(
-                  "Change Number",
-                  style: TextStyle(
-                    fontSize: AppFontSize.sm,
-                    color: AppPalette.primaryBlue,
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: width * 0.06),
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: height * 0.04),
+
+                  /// ✅ Back Button
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 40),
+                  SizedBox(height: height * 0.02),
 
-              /// OTP Boxes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(6, (index) {
-                  return SizedBox(
-                    width: 48,
-                    height: 56,
-                    child: TextField(
-                      controller: controllers[index],
-                      focusNode: focusNodes[index],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                        fontSize: AppFontSize.xl,
-                        color: AppPalette.white,
-                        fontWeight: FontWeight.bold,
+                  /// ✅ Title
+                  Text(
+                    "Verify OTP",
+                    style: TextStyle(
+                      fontSize: width * 0.07,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  SizedBox(height: height * 0.01),
+
+                  /// ✅ Subtitle
+                  Text(
+                    "Enter the 6-Digit code",
+                    style: TextStyle(
+                      fontSize: width * 0.04,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+
+                  SizedBox(height: height * 0.02),
+
+                  /// ✅ CHANGE NUMBER (RESTORED 😎🔥)
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Text(
+                      "Change Number",
+                      style: TextStyle(
+                        fontSize: width * 0.038,
+                        color: AppPalette.primaryBlue,
+                        fontWeight: FontWeight.w500,
                       ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(1),
-                      ],
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor:
-                            AppPalette.lightGrey.withOpacity(0.15),
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                    ),
+                  ),
+
+                  SizedBox(height: height * 0.05),
+
+                  /// ✅ PINPUT
+                  Center(
+                    child: Pinput(
+                      controller: _otpController,
+                      length: 6,
+
+                      defaultPinTheme: defaultPinTheme,
+
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+
+                      focusedPinTheme: defaultPinTheme.copyWith(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade900,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue),
                         ),
                       ),
-                      onChanged: (value) {
-                        if (value.isNotEmpty && index < 5) {
-                          focusNodes[index + 1]
-                              .requestFocus();
-                        }
+                    ),
+                  ),
 
-                        if (value.isEmpty && index > 0) {
-                          focusNodes[index - 1]
-                              .requestFocus();
-                        }
+                  SizedBox(height: height * 0.06),
+
+                  /// ✅ Verify Button
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final isLoading = state.status == AuthStatus.loading;
+
+                      return SizedBox(
+                        width: double.infinity,
+                        height: height * 0.065,
+
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  final otp = _otpController.text;
+
+                                  if (otp.length == 6) {
+                                    context.read<AuthBloc>().add(
+                                      VerifyOtpEvent(otp),
+                                    );
+                                  }
+                                },
+
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF031AE8),
+                          ),
+
+                          child: isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  "Verify",
+                                  style: TextStyle(
+                                    fontSize: width * 0.045,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: height * 0.03),
+
+                  /// ✅ RESEND TIMER
+                  Center(
+                    child: BlocBuilder<OtpTimerCubit, int>(
+                      builder: (context, seconds) {
+                        final canResend = seconds == 0;
+
+                        return GestureDetector(
+                          onTap: canResend
+                              ? () {
+                                  _otpController.clear();
+
+                                  final phone = context.read<AuthBloc>().phone;
+
+                                  if (phone != null) {
+                                    context.read<AuthBloc>().add(
+                                      ResendOtpEvent(phone),
+                                    );
+                                  }
+
+                                  context.read<OtpTimerCubit>().resetTimer();
+                                }
+                              : null,
+
+                          child: Text(
+                            canResend
+                                ? "Resend OTP"
+                                : "Resend OTP in ${seconds}s",
+
+                            style: TextStyle(
+                              fontSize: width * 0.035,
+                              color: canResend ? Colors.blue : Colors.grey,
+                            ),
+                          ),
+                        );
                       },
                     ),
-                  );
-                }),
-              ),
-
-              const SizedBox(height: 50),
-
-              /// Verify Button
-              SizedBox(
-                height: 56,
-                child: BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    return AppButton(
-                      text: "Verify",
-                      onPressed: () {
-                        if (enteredOtp.length == 6) {
-                          context.read<AuthBloc>().add(
-                                VerifyOtpEvent(
-                                  enteredOtp,
-                                ),
-                              );
-                        }
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: SpacingConst.large),
-
-              /// Resend Text
-              const Center(
-                child: Text(
-                  "Resend OTP in 32s",
-                  style: TextStyle(
-                    fontSize: AppFontSize.sm,
-                    color: AppPalette.grey,
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
