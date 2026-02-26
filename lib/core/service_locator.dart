@@ -1,9 +1,15 @@
 import 'package:application/core/app_preferences.dart';
+import 'package:application/core/database/app_database.dart';
+import 'package:application/features/category_listing/data/datasource/category_local_data_source.dart';
+import 'package:application/features/category_listing/data/datasource/category_local_data_source_impl.dart';
 import 'package:application/features/category_listing/data/datasource/category_remote_data_source.dart';
 import 'package:application/features/category_listing/data/datasource/category_remote_data_source_impl.dart';
 import 'package:application/features/category_listing/data/repository/category_repository_impl.dart';
 import 'package:application/features/category_listing/domain/repository/category_repository.dart';
+import 'package:application/features/category_listing/domain/usecase/add_category_usecase.dart';
 import 'package:application/features/category_listing/domain/usecase/category_usecase.dart';
+import 'package:application/features/category_listing/domain/usecase/delete_category_usecase.dart';
+import 'package:application/features/category_listing/domain/usecase/sync_category_usecase.dart';
 import 'package:application/features/category_listing/presentation/bloc/category_bloc.dart';
 import 'package:application/screens/dashboard/data/datasource/transaction_remote_datasource.dart';
 import 'package:application/screens/dashboard/data/datasource/transaction_remote_datasource_impl.dart';
@@ -30,6 +36,7 @@ import 'package:application/screens/login/domain/auth_repository.dart';
 import 'package:application/screens/login/domain/auth_usecase.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 final sl = GetIt.instance;
 
@@ -127,30 +134,56 @@ sl.registerLazySingleton(
       deleteTransactionsUseCase: sl(),
     ),
   );
-
-  // ======================================================
+// ======================================================
 // 🟣 CATEGORY SECTION (CATEGORY LISTING)
 // ======================================================
 
-/// Category Data Source
+/// 🔹 Database
+final database = await AppDatabase.database;
+sl.registerLazySingleton<Database>(() => database);
+
+/// 🔹 Local Data Source
+sl.registerLazySingleton<CategoryLocalDataSource>(
+  () => CategoryLocalDataSourceImpl(sl()),
+);
+
+/// 🔹 Remote Data Source
 sl.registerLazySingleton<CategoryRemoteDataSource>(
   () => CategoryRemoteDataSourceImpl(sl()),
 );
 
-/// Category Repository
+/// 🔹 Repository  ✅ FIXED HERE
 sl.registerLazySingleton<CategoryRepository>(
-  () => CategoryRepositoryImpl(sl()),
+  () => CategoryRepositoryImpl(
+    local: sl(),
+    remote: sl(),
+  ),
 );
 
-/// Category UseCase
+/// 🔹 UseCases
 sl.registerLazySingleton(
   () => GetCategoriesUseCase(sl()),
 );
 
-/// Category Bloc
+sl.registerLazySingleton(
+  () => AddCategoryUseCase(sl()),
+);
+
+sl.registerLazySingleton(
+  () => DeleteCategoryUseCase(sl()),
+);
+
+sl.registerLazySingleton(
+  () => SyncCategoryUseCase(sl()),
+);
+
+/// 🔹 Bloc
 sl.registerFactory(
   () => CategoryBloc(
     getCategoriesUseCase: sl(),
+    addCategoryUseCase: sl(),
+    deleteCategoryUseCase: sl(),
+    syncCategoryUseCase: sl(),
   ),
 );
 }
