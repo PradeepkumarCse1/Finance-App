@@ -94,6 +94,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       /// ✅ NEW USER
       else {
+         await appPreferences.saveSession(
+          token: authData.token,
+          nickname: authData.nickname??"",
+          phone: _phone??"",
+        );
         emit(
           state.copyWith(
             status: AuthStatus.newUser,

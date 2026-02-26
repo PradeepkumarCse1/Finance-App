@@ -8,6 +8,12 @@ import 'package:application/screens/dashboard/domain/usecase/get_transactions_us
 import 'package:application/screens/dashboard/domain/usecase/sync_transactions_usecase.dart';
 import 'package:application/screens/dashboard/presentation/bloc/transaction_bloc.dart';
 import 'package:application/screens/login/presentation/cubit/otp_timer_cubit.dart';
+import 'package:application/screens/name_page/data/datasource/name_remote_data_source.dart';
+import 'package:application/screens/name_page/data/datasource/name_remote_data_source_impl.dart';
+import 'package:application/screens/name_page/data/repository/name_repository_impl.dart';
+import 'package:application/screens/name_page/domain/repository/name_repository.dart';
+import 'package:application/screens/name_page/domain/usecase/name_usecase.dart';
+import 'package:application/screens/name_page/presentation/bloc/name_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:application/core/network/dio_client.dart';
@@ -55,6 +61,34 @@ sl.registerFactory(
 
     sl.registerFactory(
     () => OtpTimerCubit(),
+  );
+
+
+   // ======================================================
+  // 🟢 NAME SECTION (NEW USER CREATE ACCOUNT)
+  // ======================================================
+
+  /// Name Data Source
+  sl.registerLazySingleton<NameRemoteDataSource>(
+    () => NameRemoteDataSourceImpl(sl()),
+  );
+
+  /// Name Repository
+  sl.registerLazySingleton<NameRepository>(
+    () => NameRepositoryImpl(sl()),
+  );
+
+  /// Name UseCase
+  sl.registerLazySingleton(
+    () => NameUsecase(sl()),
+  );
+
+  /// Name Bloc
+  sl.registerFactory(
+    () => NameBloc(
+      createAccountUseCase: sl(),
+      appPreferences: sl()
+    ),
   );
 
   /// Data Source
