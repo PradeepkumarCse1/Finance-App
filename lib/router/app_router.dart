@@ -2,6 +2,7 @@ import 'package:application/screens/dashboard/dashboard_screen.dart';
 import 'package:application/screens/login/presentation/screens/auth_page.dart';
 import 'package:application/screens/login/presentation/screens/verify_otp_page.dart';
 import 'package:application/screens/name_page/presentation/name_page_screen.dart';
+import 'package:application/screens/profile/profile_page.dart';
 import 'package:application/screens/splash_screen/splash_screen.dart';
 import 'package:application/screens/profile/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,18 @@ class AppRouter {
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => PhoneLoginPage());
       case AppRoutes.home:
+        return MaterialPageRoute(
+          builder: (_) =>  NamePage(),
+        );
+        case AppRoutes.verify:
+        return MaterialPageRoute(
+          builder: (_) =>  NamePage(),
+        );
+       case AppRoutes.profilePage:
+        return MaterialPageRoute(
+          builder: (_) =>  ProfilePage(),
+        );
+
         return MaterialPageRoute(builder: (_) => FinanceDashboard());
       case AppRoutes.verify:
         return MaterialPageRoute(builder: (_) => VerifyOtpPage());

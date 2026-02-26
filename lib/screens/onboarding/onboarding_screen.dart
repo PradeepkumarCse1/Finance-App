@@ -83,6 +83,7 @@ class OnboardingScreen extends StatelessWidget {
                         const SizedBox(height: SpacingConst.large),
 
                         /// Skip Button
+                        if(currentPage != pages.length - 1)
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
