@@ -1,12 +1,14 @@
 import 'package:application/common/app_button.dart';
 import 'package:application/common/constant.dart';
+import 'package:application/core/service_locator.dart';
+import 'package:application/router/routes.dart';
 import 'package:application/screens/login/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
+import '../cubit/otp_timer_cubit.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   const VerifyOtpPage({super.key});
@@ -18,9 +20,14 @@ class VerifyOtpPage extends StatefulWidget {
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
   final List<TextEditingController> controllers =
       List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
 
-  final List<FocusNode> focusNodes =
-      List.generate(6, (_) => FocusNode());
+  final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
+
+  String get enteredOtp => controllers.map((c) => c.text).join();
 
   String get enteredOtp => controllers.map((c) => c.text).join();
 
@@ -168,8 +175,209 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     color: AppPalette.grey,
                   ),
                 ),
+  @override
+  void dispose() {
+    for (final c in controllers) {
+      c.dispose();
+    }
+    for (final f in focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
+    return BlocProvider(
+      create: (_) => sl<OtpTimerCubit>()..startTimer(),
+      child:  BlocListener<AuthBloc, AuthState>(
+    listener: (context, state) {
+ if (state.status == AuthStatus.authenticated) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
+
+      if (state.status == AuthStatus.newUser) {
+        Navigator.pushReplacementNamed(context, AppRoutes.createProfile);
+      }
+
+      if (state.status == AuthStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.errorMessage ?? "Error")),
+        );
+      }
+    },
+
+  
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: width * 0.06),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: height * 0.04),
+        
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  ),
+        
+                  SizedBox(height: height * 0.02),
+        
+                  Text(
+                    "Verify OTP",
+                    style: TextStyle(
+                      fontSize: width * 0.07,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+        
+                  SizedBox(height: height * 0.01),
+        
+                  Text(
+                    "Enter the 6-Digit code",
+                    style: TextStyle(
+                      fontSize: width * 0.04,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+        
+                  SizedBox(height: height * 0.02),
+        
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Text(
+                      "Change Number",
+                      style: TextStyle(
+                        fontSize: width * 0.038,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+        
+                  SizedBox(height: height * 0.05),
+        
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(6, (index) {
+                      return SizedBox(
+                        width: width * 0.12,
+                        child: TextField(
+                          controller: controllers[index],
+                          focusNode: focusNodes[index],
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(
+                            fontSize: width * 0.05,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(1),
+                          ],
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.grey.shade900,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            if (value.isNotEmpty && index < 5) {
+                              focusNodes[index + 1].requestFocus();
+                            }
+        
+                            if (value.isEmpty && index > 0) {
+                              focusNodes[index - 1].requestFocus();
+                            }
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+        
+                  SizedBox(height: height * 0.06),
+        
+                  SizedBox(
+                    width: double.infinity,
+                    height: height * 0.065,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (enteredOtp.length == 6) {
+                          context.read<AuthBloc>().add(
+                            VerifyOtpEvent(enteredOtp),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF031AE8),
+                      ),
+                      child: Text(
+                        "Verify",
+                        style: TextStyle(
+                          fontSize: width * 0.045,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+        
+                  SizedBox(height: height * 0.03),
+        
+                  /// ✅ FIXED RESEND LOGIC 😎🔥
+                  Center(
+                    child: BlocBuilder<OtpTimerCubit, int>(
+                      builder: (context, seconds) {
+                        final canResend = seconds == 0;
+        
+                        return GestureDetector(
+                          onTap: canResend
+                              ? () {
+                                  for (final controller in controllers) {
+                                    controller.clear();
+                                  }
+        
+                                  /// ✅ Move cursor to first box
+                                  focusNodes[0].requestFocus();
+                                  final phone = context.read<AuthBloc>().phone;
+        
+                                  if (phone != null) {
+                                    context.read<AuthBloc>().add(
+                                      ResendOtpEvent(phone), // ✅ FIXED
+                                    );
+                                  }
+        
+                                  context.read<OtpTimerCubit>().resetTimer();
+                                }
+                              : null,
+        
+                          child: Text(
+                            canResend
+                                ? "Resend OTP"
+                                : "Resend OTP in ${seconds}s",
+        
+                            style: TextStyle(
+                              fontSize: width * 0.035,
+                              color: canResend
+                                  ? Colors.blue
+                                  : Colors.grey.shade500,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
