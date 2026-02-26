@@ -1,9 +1,9 @@
-import 'package:application/common/app_button.dart';
 import 'package:application/common/constant.dart';
 import 'package:application/core/service_locator.dart';
 import 'package:application/router/routes.dart';
 import 'package:application/screens/login/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -18,12 +18,16 @@ class VerifyOtpPage extends StatefulWidget {
 }
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
+  final TextEditingController _otpController = TextEditingController();
 
-  String _enteredOtp = "";
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final height = size.height;
@@ -48,25 +52,20 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
       ],
 
       child: BlocListener<AuthBloc, AuthState>(
-        listenWhen: (previous, current) =>
-            previous.status != current.status,
+        listenWhen: (previous, current) => previous.status != current.status,
 
         listener: (context, state) {
-
           if (state.status == AuthStatus.authenticated) {
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           }
 
           if (state.status == AuthStatus.newUser) {
-            Navigator.pushReplacementNamed(
-                context, AppRoutes.createProfile);
+            Navigator.pushReplacementNamed(context, AppRoutes.createProfile);
           }
 
           if (state.status == AuthStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage ?? "Error"),
-              ),
+              SnackBar(content: Text(state.errorMessage ?? "Error")),
             );
           }
         },
@@ -81,9 +80,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   SizedBox(height: height * 0.04),
 
+                  /// ✅ Back Button
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -91,6 +90,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
 
                   SizedBox(height: height * 0.02),
 
+                  /// ✅ Title
                   Text(
                     "Verify OTP",
                     style: TextStyle(
@@ -102,6 +102,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
 
                   SizedBox(height: height * 0.01),
 
+                  /// ✅ Subtitle
                   Text(
                     "Enter the 6-Digit code",
                     style: TextStyle(
@@ -112,24 +113,31 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
 
                   SizedBox(height: height * 0.02),
 
+                  /// ✅ CHANGE NUMBER (RESTORED 😎🔥)
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Text(
                       "Change Number",
                       style: TextStyle(
                         fontSize: width * 0.038,
-                        color: Colors.blue,
+                        color: AppPalette.primaryBlue,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
 
                   SizedBox(height: height * 0.05),
 
-                  /// ✅ PINPUT 🔥
+                  /// ✅ PINPUT
                   Center(
                     child: Pinput(
+                      controller: _otpController,
                       length: 6,
+
                       defaultPinTheme: defaultPinTheme,
+
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+
                       focusedPinTheme: defaultPinTheme.copyWith(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade900,
@@ -137,63 +145,72 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                           border: Border.all(color: Colors.blue),
                         ),
                       ),
-
-                      onChanged: (value) {
-                        _enteredOtp = value;
-                      },
                     ),
                   ),
 
                   SizedBox(height: height * 0.06),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: height * 0.065,
+                  /// ✅ Verify Button
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final isLoading = state.status == AuthStatus.loading;
 
-                    child: ElevatedButton(
-                      onPressed: () {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: height * 0.065,
 
-                        if (_enteredOtp.length == 6) {
-                          context.read<AuthBloc>().add(
-                                VerifyOtpEvent(_enteredOtp),
-                              );
-                        }
-                      },
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  final otp = _otpController.text;
 
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF031AE8),
-                      ),
+                                  if (otp.length == 6) {
+                                    context.read<AuthBloc>().add(
+                                      VerifyOtpEvent(otp),
+                                    );
+                                  }
+                                },
 
-                      child: Text(
-                        "Verify",
-                        style: TextStyle(
-                          fontSize: width * 0.045,
-                          color: Colors.white,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF031AE8),
+                          ),
+
+                          child: isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  "Verify",
+                                  style: TextStyle(
+                                    fontSize: width * 0.045,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
 
                   SizedBox(height: height * 0.03),
 
-                  /// ✅ RESEND TIMER 🔥
+                  /// ✅ RESEND TIMER
                   Center(
                     child: BlocBuilder<OtpTimerCubit, int>(
                       builder: (context, seconds) {
-
                         final canResend = seconds == 0;
 
                         return GestureDetector(
                           onTap: canResend
                               ? () {
+                                  _otpController.clear();
 
-                                  final phone =
-                                      context.read<AuthBloc>().phone;
+                                  final phone = context.read<AuthBloc>().phone;
 
                                   if (phone != null) {
                                     context.read<AuthBloc>().add(
-                                          ResendOtpEvent(phone),
-                                        );
+                                      ResendOtpEvent(phone),
+                                    );
                                   }
 
                                   context.read<OtpTimerCubit>().resetTimer();
@@ -207,9 +224,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
 
                             style: TextStyle(
                               fontSize: width * 0.035,
-                              color: canResend
-                                  ? Colors.blue
-                                  : Colors.grey,
+                              color: canResend ? Colors.blue : Colors.grey,
                             ),
                           ),
                         );

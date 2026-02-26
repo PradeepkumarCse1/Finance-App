@@ -1,5 +1,6 @@
 
 import 'package:application/core/service_locator.dart';
+import 'package:application/screens/dashboard/presentation/bloc/transaction_bloc.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:application/router/app_router.dart';
@@ -20,6 +21,8 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<AuthBloc>()),
+        BlocProvider(create: (_) => sl<TransactionBloc>()),
+
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
