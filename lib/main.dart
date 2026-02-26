@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.onboarding,
+        initialRoute: AppRoutes.splashScreen,
         onGenerateRoute: AppRouter.generateRoute,
       ),
     );

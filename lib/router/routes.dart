@@ -3,5 +3,6 @@ class AppRoutes {
   static const String login = '/login';
   static const String home = '/home';
   static const String verify = '/verifyOtp';
+  static const String splashScreen = "/splashScreen";
 
 }
