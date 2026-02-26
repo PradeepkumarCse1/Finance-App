@@ -1,10 +1,16 @@
 import 'package:application/core/app_preferences.dart';
+import 'package:application/screens/dashboard/data/datasource/transaction_remote_datasource.dart';
+import 'package:application/screens/dashboard/data/datasource/transaction_remote_datasource_impl.dart';
+import 'package:application/screens/dashboard/data/repository/transaction_repository_impl.dart';
+import 'package:application/screens/dashboard/domain/repository/transaction_repository.dart';
+import 'package:application/screens/dashboard/domain/usecase/delete_transactions_usecase.dart';
+import 'package:application/screens/dashboard/domain/usecase/get_transactions_usecase.dart';
+import 'package:application/screens/dashboard/domain/usecase/sync_transactions_usecase.dart';
+import 'package:application/screens/dashboard/presentation/bloc/transaction_bloc.dart';
 import 'package:application/screens/login/presentation/cubit/otp_timer_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-
 import 'package:application/core/network/dio_client.dart';
-
 import 'package:application/screens/login/data/auth_remote_datasource.dart';
 import 'package:application/screens/login/data/auth_remote_datasource_impl.dart';
 import 'package:application/screens/login/data/auth_repository_impl.dart';
@@ -50,4 +56,37 @@ sl.registerFactory(
     sl.registerFactory(
     () => OtpTimerCubit(),
   );
+
+  /// Data Source
+  sl.registerLazySingleton<TransactionRemoteDataSource>(
+    () => TransactionRemoteDataSourceImpl(sl()),
+  );
+
+  /// Repository
+  sl.registerLazySingleton<TransactionRepository>(
+    () => TransactionRepositoryImpl(sl()),
+  );
+
+sl.registerLazySingleton(
+  () => GetTransactionsUseCase(sl()),
+);
+
+sl.registerLazySingleton(
+  () => SyncTransactionsUseCase(sl()),
+);
+
+sl.registerLazySingleton(
+  () => DeleteTransactionsUseCase(sl()),
+);
+
+  /// Bloc
+  sl.registerFactory(
+    () => TransactionBloc(
+      getTransactionsUseCase: sl(),
+      syncTransactionsUseCase: sl(),
+      deleteTransactionsUseCase: sl(),
+    ),
+  );
+
+  
 }
