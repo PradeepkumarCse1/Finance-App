@@ -1,5 +1,6 @@
 
 import 'package:application/core/service_locator.dart';
+import 'package:application/features/category_listing/presentation/bloc/category_bloc.dart';
 import 'package:application/screens/dashboard/presentation/bloc/transaction_bloc.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
 import 'package:application/screens/name_page/presentation/bloc/name_bloc.dart';
@@ -23,8 +24,8 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => sl<AuthBloc>()),
         BlocProvider(create: (_) => sl<TransactionBloc>()),
-
-                BlocProvider(create: (_) => sl<NameBloc>())
+                BlocProvider(create: (_) => sl<NameBloc>()),
+                BlocProvider(create: (_) => sl<CategoryBloc>())
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

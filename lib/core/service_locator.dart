@@ -1,4 +1,10 @@
 import 'package:application/core/app_preferences.dart';
+import 'package:application/features/category_listing/data/datasource/category_remote_data_source.dart';
+import 'package:application/features/category_listing/data/datasource/category_remote_data_source_impl.dart';
+import 'package:application/features/category_listing/data/repository/category_repository_impl.dart';
+import 'package:application/features/category_listing/domain/repository/category_repository.dart';
+import 'package:application/features/category_listing/domain/usecase/category_usecase.dart';
+import 'package:application/features/category_listing/presentation/bloc/category_bloc.dart';
 import 'package:application/screens/dashboard/data/datasource/transaction_remote_datasource.dart';
 import 'package:application/screens/dashboard/data/datasource/transaction_remote_datasource_impl.dart';
 import 'package:application/screens/dashboard/data/repository/transaction_repository_impl.dart';
@@ -122,5 +128,29 @@ sl.registerLazySingleton(
     ),
   );
 
-  
+  // ======================================================
+// 🟣 CATEGORY SECTION (CATEGORY LISTING)
+// ======================================================
+
+/// Category Data Source
+sl.registerLazySingleton<CategoryRemoteDataSource>(
+  () => CategoryRemoteDataSourceImpl(sl()),
+);
+
+/// Category Repository
+sl.registerLazySingleton<CategoryRepository>(
+  () => CategoryRepositoryImpl(sl()),
+);
+
+/// Category UseCase
+sl.registerLazySingleton(
+  () => GetCategoriesUseCase(sl()),
+);
+
+/// Category Bloc
+sl.registerFactory(
+  () => CategoryBloc(
+    getCategoriesUseCase: sl(),
+  ),
+);
 }

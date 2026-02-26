@@ -90,6 +90,7 @@ class NameBloc extends Bloc<NameEvent, NameState> {
     );
   },
   (token) {
+    appPreferences.saveToken(token);
     emit(
       state.copyWith(
         status: NameStatus.success,
