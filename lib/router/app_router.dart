@@ -1,5 +1,6 @@
 import 'package:application/screens/dashboard/dashboard_screen.dart';
 import 'package:application/screens/login/presentation/screens/auth_page.dart';
+import 'package:application/screens/login/presentation/screens/verify_otp_page.dart';
 import 'package:flutter/material.dart';
 import 'package:application/router/routes.dart';
 
@@ -23,6 +24,10 @@ class AppRouter {
       case AppRoutes.home:
         return MaterialPageRoute(
           builder: (_) => const FinanceDashboard(),
+        );
+        case AppRoutes.verify:
+        return MaterialPageRoute(
+          builder: (_) => const VerifyOtpPage(),
         );
 
       default:

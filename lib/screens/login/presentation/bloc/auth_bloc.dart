@@ -2,65 +2,73 @@ import 'package:application/screens/login/domain/auth_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
-
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+
   final SendOtpUseCase sendOtpUseCase;
-  // final CreateAccountUseCase createAccountUseCase;
 
   String? _serverOtp;
-  bool? _userExists;
-  String? _phone;
 
-  AuthBloc({
-    required this.sendOtpUseCase,
-  }) : super(AuthInitial()) {
-   on<SendOtpEvent>((event, emit) async {
+  AuthBloc({required this.sendOtpUseCase})
+      : super(const AuthState()) {
 
-  emit(AuthLoading());
+    /// ✅ SEND OTP
+    on<SendOtpEvent>((event, emit) async {
 
-  final result = await sendOtpUseCase(event.phone);
+      emit(state.copyWith(status: AuthStatus.loading));
 
-  result.fold(
+      final result = await sendOtpUseCase(event.phone);
 
-    /// ✅ FAILURE
-    (failure) {
-      emit(AuthError(failure.message));
-    },
+      result.fold(
 
-    /// ✅ SUCCESS
-    (authData) {
+        /// FAILURE
+        (failure) {
+          emit(state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          ));
+        },
 
-      _serverOtp = authData.otp;
-      _userExists = authData.userExists;
-      _phone = event.phone;
+        /// SUCCESS
+        (authData) {
 
-      emit(OtpSentState(authData));
-    },
-  );
-});
+          _serverOtp = authData.otp;
 
-    on<VerifyOtpEvent>((event, emit) async {
-      if (event.enteredOtp == _serverOtp) {
-        if (_userExists == true) {
-          emit(AuthenticatedState("Login Success"));
-        } else {
-          emit(NewUserState(_phone!));
-        }
-      } else {
-        emit(AuthError("Invalid OTP"));
-      }
+          emit(state.copyWith(
+            status: AuthStatus.otpSent,
+            authData: authData,
+          ));
+        },
+      );
     });
 
-    // on<CreateAccountEvent>((event, emit) async {
-    //   emit(AuthLoading());
+    /// ✅ VERIFY OTP
+    on<VerifyOtpEvent>((event, emit) {
 
-    //   try {
-    //     final token =
-    //         await createAccountUseCase(event.phone, event.nickname);
-    //     emit(AuthenticatedState(token));
-    //   } catch (e) {
-    //     emit(AuthError(e.toString()));
-    //   }
-    // });
+      if (event.enteredOtp != _serverOtp) {
+
+        emit(state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: "Invalid OTP",
+        ));
+
+        return;
+      }
+
+      /// OTP Correct
+      final authData = state.authData!;
+
+      if (authData.userExists) {
+
+        emit(state.copyWith(
+          status: AuthStatus.authenticated,
+        ));
+
+      } else {
+
+        emit(state.copyWith(
+          status: AuthStatus.verified,
+        ));
+      }
+    });
   }
 }

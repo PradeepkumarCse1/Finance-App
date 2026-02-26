@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "application cors",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "application (1) (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "application (1) (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "Flutter Web (Bypass CORS)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "chrome",
+            "args": [
+                "--web-browser-flag=--disable-web-security",
+                "--web-browser-flag=--user-data-dir=C:/temp/chrome_dev"
+            ],
+    
+        }
+    ]
+}
