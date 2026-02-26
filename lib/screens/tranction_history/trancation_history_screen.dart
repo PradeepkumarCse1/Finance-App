@@ -41,25 +41,44 @@ class TransactionsScreen extends StatelessWidget {
                     );
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: state.transactions.length,
-                    itemBuilder: (context, index) {
+                  return Builder(
+  builder: (context) {
 
-                      final txn = state.transactions[index];
-             
-                      return TransactionCardWidget(
-                        transaction: txn,
+    /// ✅ FILTER FIRST (VERY IMPORTANT)
+    final visibleTransactions = state.transactions
+        .where((t) => !t.isDeleted)
+        .toList();
 
-                        /// ✅ DELETE EVENT
-                        onDelete: () {
-                          context.read<TransactionBloc>().add(
-                            DeleteTransactionEvent(txn.id),
-                          );
-                        },
-                      );
-                    },
-                  );
+    if (visibleTransactions.isEmpty) {
+      return const Center(
+        child: Text(
+          "No Transactions Found",
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: visibleTransactions.length,
+      itemBuilder: (context, index) {
+
+        final txn = visibleTransactions[index];
+
+        return TransactionCardWidget(
+          transaction: txn,
+
+          /// ✅ DELETE EVENT
+          onDelete: () {
+            context.read<TransactionBloc>().add(
+              DeleteTransactionEvent(txn.id),
+            );
+          },
+        );
+      },
+    );
+  },
+);
                 },
               ),
             ),
