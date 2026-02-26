@@ -37,96 +37,99 @@ import 'package:application/screens/login/domain/auth_usecase.dart';
 import 'package:application/screens/login/presentation/bloc/auth_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-
 final sl = GetIt.instance;
 
 Future<void> init() async {
-final prefs = await SharedPreferences.getInstance();
 
-sl.registerLazySingleton<AppPreferences>(
-  () => AppPreferences(prefs),
-);
-  /// ✅ Dio (External)
+  /// 🔥 DATABASE (VERY IMPORTANT)
+  // final database = await AppDatabase.database;
+
+  // sl.registerLazySingleton<Database>(() => database);
+
+  /// ======================================================
+  /// 🔵 CORE
+  /// ======================================================
+
+  final prefs = await SharedPreferences.getInstance();
+
+  sl.registerLazySingleton<AppPreferences>(
+    () => AppPreferences(prefs),
+  );
+
   sl.registerLazySingleton<Dio>(() => DioClient.dio);
 
-  /// ✅ Data Source
+  /// ======================================================
+  /// 🟢 AUTH
+  /// ======================================================
+
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),
   );
 
-  /// ✅ Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(sl()),
   );
 
-  /// ✅ UseCase
   sl.registerLazySingleton(
     () => SendOtpUseCase(sl()),
   );
 
-  /// ✅ Bloc
-sl.registerFactory(
-  () => AuthBloc(
-    sendOtpUseCase: sl(),
-    appPreferences: sl(),   // ✅ REQUIRED
-  ),
-);
-
-    sl.registerFactory(
-    () => OtpTimerCubit(),
+  sl.registerFactory(
+    () => AuthBloc(
+      sendOtpUseCase: sl(),
+      appPreferences: sl(),
+    ),
   );
 
+  sl.registerFactory(() => OtpTimerCubit());
 
-   // ======================================================
-  // 🟢 NAME SECTION (NEW USER CREATE ACCOUNT)
-  // ======================================================
+  /// ======================================================
+  /// 🟡 NAME (CREATE ACCOUNT)
+  /// ======================================================
 
-  /// Name Data Source
   sl.registerLazySingleton<NameRemoteDataSource>(
     () => NameRemoteDataSourceImpl(sl()),
   );
 
-  /// Name Repository
   sl.registerLazySingleton<NameRepository>(
     () => NameRepositoryImpl(sl()),
   );
 
-  /// Name UseCase
   sl.registerLazySingleton(
     () => NameUsecase(sl()),
   );
 
-  /// Name Bloc
   sl.registerFactory(
     () => NameBloc(
       createAccountUseCase: sl(),
-      appPreferences: sl()
+      appPreferences: sl(),
     ),
   );
 
-  /// Data Source
+  /// ======================================================
+  /// 🟠 TRANSACTIONS
+  /// ======================================================
+
   sl.registerLazySingleton<TransactionRemoteDataSource>(
     () => TransactionRemoteDataSourceImpl(sl()),
   );
 
-  /// Repository
   sl.registerLazySingleton<TransactionRepository>(
     () => TransactionRepositoryImpl(sl()),
   );
 
-sl.registerLazySingleton(
-  () => GetTransactionsUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => GetTransactionsUseCase(sl()),
+  );
 
-sl.registerLazySingleton(
-  () => SyncTransactionsUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => SyncTransactionsUseCase(sl()),
+  );
 
-sl.registerLazySingleton(
-  () => DeleteTransactionsUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => DeleteTransactionsUseCase(sl()),
+  );
 
-  /// Bloc
   sl.registerFactory(
     () => TransactionBloc(
       getTransactionsUseCase: sl(),
@@ -134,56 +137,48 @@ sl.registerLazySingleton(
       deleteTransactionsUseCase: sl(),
     ),
   );
-// ======================================================
-// 🟣 CATEGORY SECTION (CATEGORY LISTING)
-// ======================================================
 
-/// 🔹 Database
-final database = await AppDatabase.database;
-sl.registerLazySingleton<Database>(() => database);
+  /// ======================================================
+  /// 🟣 CATEGORIES
+  /// ======================================================
 
-/// 🔹 Local Data Source
-sl.registerLazySingleton<CategoryLocalDataSource>(
-  () => CategoryLocalDataSourceImpl(sl()),
-);
+  sl.registerLazySingleton<CategoryLocalDataSource>(
+    () => CategoryLocalDataSourceImpl(sl()),
+  );
 
-/// 🔹 Remote Data Source
-sl.registerLazySingleton<CategoryRemoteDataSource>(
-  () => CategoryRemoteDataSourceImpl(sl()),
-);
+  sl.registerLazySingleton<CategoryRemoteDataSource>(
+    () => CategoryRemoteDataSourceImpl(sl()),
+  );
 
-/// 🔹 Repository  ✅ FIXED HERE
-sl.registerLazySingleton<CategoryRepository>(
-  () => CategoryRepositoryImpl(
-    local: sl(),
-    remote: sl(),
-  ),
-);
+  sl.registerLazySingleton<CategoryRepository>(
+    () => CategoryRepositoryImpl(
+      local: sl(),
+      remote: sl(),
+    ),
+  );
 
-/// 🔹 UseCases
-sl.registerLazySingleton(
-  () => GetCategoriesUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => GetCategoriesUseCase(sl()),
+  );
 
-sl.registerLazySingleton(
-  () => AddCategoryUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => AddCategoryUseCase(sl()),
+  );
 
-sl.registerLazySingleton(
-  () => DeleteCategoryUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => DeleteCategoryUseCase(sl()),
+  );
 
-sl.registerLazySingleton(
-  () => SyncCategoryUseCase(sl()),
-);
+  sl.registerLazySingleton(
+    () => SyncCategoryUseCase(sl()),
+  );
 
-/// 🔹 Bloc
-sl.registerFactory(
-  () => CategoryBloc(
-    getCategoriesUseCase: sl(),
-    addCategoryUseCase: sl(),
-    deleteCategoryUseCase: sl(),
-    syncCategoryUseCase: sl(),
-  ),
-);
+  sl.registerFactory(
+    () => CategoryBloc(
+      getCategoriesUseCase: sl(),
+      addCategoryUseCase: sl(),
+      deleteCategoryUseCase: sl(),
+      syncCategoryUseCase: sl(),
+    ),
+  );
 }
